@@ -17,7 +17,7 @@ s3 = boto3.client("s3", region_name=os.environ.get("REGION"))
 dynamo = boto3.client("dynamodb", region_name=os.environ.get("REGION"))
 db = mysql.connector.connect(
     host=os.environ.get("HOST"),
-    user=os.environ.get("USER"),
+    user=os.environ.get("DBUSER"),
     password=os.environ.get("PASSWORD"),
     database=os.environ.get("DATABASE")
 )
