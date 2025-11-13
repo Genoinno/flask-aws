@@ -169,7 +169,7 @@ def files():
 
     return jsonify(items)
 
-@app.route("/api/logout", methods=["GET", "POST"])
+@app.route("/logout", methods=["GET", "POST"])
 def logout():
     session.clear()
     return redirect("/login")
