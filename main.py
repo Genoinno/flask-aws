@@ -102,7 +102,7 @@ def upload():
         # if 'file' not in request.files:
             # return jsonify({'error': 'No file uploaded'}), 400
     
-        file = request.files['file']
+        file = request.files['image']
         title = request.form.get('title')
         description = request.form.get('description')
         user_id = session.get("user_id", None)
