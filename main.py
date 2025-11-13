@@ -12,9 +12,14 @@ from utils import query
 load_dotenv()
 
 app = Flask(__name__)
+
+REGION = os.environ.get("REGION")
+BUCKET = os.environ.get("BUCKET")
+
 app.secret_key = os.environ.get("SECRET_ACCESS_KEY")  # needed for session
-s3 = boto3.client("s3", region_name=os.environ.get("REGION"))
-dynamo = boto3.client("dynamodb", region_name=os.environ.get("REGION"))
+s3 = boto3.client("s3", region_name=REGION)
+dynamodb = boto3.resource("dynamodb", region_name=REGION)
+table = dynamodb.Table(os.environ.get("TABLE"))
 db = mysql.connector.connect(
     host=os.environ.get("HOST"),
     user=os.environ.get("DBUSER"),
@@ -94,33 +99,82 @@ def get_session():
 @app.route('/upload', methods=["GET", "POST", "PUT"])
 def upload():
     if request.method == "POST":
-        file = request.files["image"]
-        title = request.form["title"]
-        description = request.form["description"]
-
-        if not file:
-            return "No file selected!", 400
-
-        ext = os.path.splitext(file.filename)[1]
-        filename = f"{uuid.uuid4()}{ext}"
-        file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-        file.save(file_path)
-
-        url = url_for("static", filename=f"uploads/{filename}")
-        mime_type = file.mimetype
-        size = os.path.getsize(file_path)
-        now = datetime.now().isoformat()
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file uploaded'}), 400
+    
+        file = request.files['file']
+        title = request.form.get('title')
+        description = request.form.get('description')
         user_id = session.get("user_id", None)
 
-        query(db, "INSERT INTO images (user_id, title, description, filename, url, mime_type, size, uploaded_at, last_edited_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)", (user_id, title, description, filename, url, mime_type, size, now, now))
+        if file.filename == '':
+            return jsonify({'error': 'No selected file'}), 400
 
-        return jsonify({
-            "message": "Upload successful",
-            "file": {
+        # Generate unique file name
+        unique_id = str(uuid.uuid4())
+        filename = f"{unique_id}_{file.filename}"
+
+        try:
+            # Upload file to S3
+            s3.upload_fileobj(
+                file,
+                BUCKET,
+                filename,
+                ExtraArgs={'ContentType': file.content_type}
+            )
+
+            # Get file metadata
+            file_url = f"https://{BUCKET}.s3.{REGION}.amazonaws.com/{filename}"
+            mime_type = file.content_type
+            file.seek(0, os.SEEK_END)
+            size = file.tell()
+
+            # Store metadata in DynamoDB
+            now = datetime.now()
+            table.put_item(Item={
+                "id": unique_id,
+                "user_id": user_id,
+                "title": title,
+                "description": description,
                 "filename": filename,
-                "url": url
-            }
-        }), 201
+                "url": file_url,
+                "mime_type": mime_type,
+                "size": size,
+                "uploaded_at": now,
+                "last_edited_at": now
+            })
+
+            return jsonify({
+                'message': 'File uploaded successfully',
+                'file_url': file_url
+            }), 200
+
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+
+
+
+        # ext = os.path.splitext(file.filename)[1]
+        # filename = f"{uuid.uuid4()}{ext}"
+        # file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+        # file.save(file_path)
+
+        # url = url_for("static", filename=f"uploads/{filename}")
+        # mime_type = file.mimetype
+        # size = os.path.getsize(file_path)
+        # now = datetime.now().isoformat()
+        # user_id = session.get("user_id", None)
+
+        # query(db, "INSERT INTO images (user_id, title, description, filename, url, mime_type, size, uploaded_at, last_edited_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)", (user_id, title, description, filename, url, mime_type, size, now, now))
+
+        # return jsonify({
+        #     "message": "Upload successful",
+        #     "file": {
+        #         "filename": filename,
+        #         "url": url
+        #     }
+        # }), 201
         
     return id
 
