@@ -130,7 +130,7 @@ def upload():
             # Prepare metadata
             file_url = f"https://{BUCKET}.s3.{REGION}.amazonaws.com/{filename}"
             mime_type = file.content_type
-            now = datetime.now()
+            now = datetime.utcnow().isoformat() + "Z"
 
             # Insert metadata into DynamoDB
             table.put_item(Item={
