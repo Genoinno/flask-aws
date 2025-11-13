@@ -184,13 +184,12 @@ def files():
         return jsonify({"error": "Not logged in"}), 401
 
     user_id = session["user_id"]
-    files = query(db, """
-        SELECT id, title, description, filename, url, mime_type, size, uploaded_at, last_edited_at
-        FROM images
-        WHERE user_id = %s
-        ORDER BY uploaded_at DESC
-    """, (user_id,), True)
-    return jsonify(files)
+    response = table.scan(
+            FilterExpression=boto3.dynamodb.conditions.Attr("user_id").eq(user_id)
+        )
+        items = response.get("Items", [])
+
+    return jsonify(items)
 
 #{
 #   "id": ...,
