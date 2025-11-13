@@ -99,8 +99,8 @@ def get_session():
 @app.route('/upload', methods=["GET", "POST", "PUT"])
 def upload():
     if request.method == "POST":
-        if 'file' not in request.files:
-            return jsonify({'error': 'No file uploaded'}), 400
+        # if 'file' not in request.files:
+            # return jsonify({'error': 'No file uploaded'}), 400
     
         file = request.files['file']
         title = request.form.get('title')
