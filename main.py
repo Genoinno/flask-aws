@@ -74,9 +74,6 @@ def login():
     try:
         user = query(db, "SELECT * FROM students WHERE name = %s", (name,), True)[0]
     except IndexError:
-        pass
-    
-    if not user:
         return jsonify({"error": "User not found"}), 404
     
     if bcrypt.checkpw(password.encode('utf-8'), user["password"].encode('utf-8')):
