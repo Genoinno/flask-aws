@@ -187,7 +187,7 @@ def files():
     response = table.scan(
             FilterExpression=boto3.dynamodb.conditions.Attr("user_id").eq(user_id)
         )
-        items = response.get("Items", [])
+    items = response.get("Items", [])
 
     return jsonify(items)
 
