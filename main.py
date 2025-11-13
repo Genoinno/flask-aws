@@ -110,11 +110,15 @@ def upload():
         if file.filename == '':
             return jsonify({'error': 'No selected file'}), 400
 
-        # Generate unique file name
         unique_id = str(uuid.uuid4())
         filename = f"{unique_id}_{file.filename}"
 
         try:
+            # Get file size before upload
+            file.seek(0, os.SEEK_END)
+            size = file.tell()
+            file.seek(0)  # reset pointer to start for upload
+
             # Upload file to S3
             s3.upload_fileobj(
                 file,
@@ -123,14 +127,12 @@ def upload():
                 ExtraArgs={'ContentType': file.content_type}
             )
 
-            # Get file metadata
+            # Prepare metadata
             file_url = f"https://{BUCKET}.s3.{REGION}.amazonaws.com/{filename}"
             mime_type = file.content_type
-            file.seek(0, os.SEEK_END)
-            size = file.tell()
-
-            # Store metadata in DynamoDB
             now = datetime.now()
+
+            # Insert metadata into DynamoDB
             table.put_item(Item={
                 "id": unique_id,
                 "user_id": user_id,
@@ -148,11 +150,9 @@ def upload():
                 'message': 'File uploaded successfully',
                 'file_url': file_url
             }), 200
-
+        
         except Exception as e:
             raise e
-
-
 
 
         # ext = os.path.splitext(file.filename)[1]
