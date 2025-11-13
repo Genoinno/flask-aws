@@ -154,28 +154,6 @@ def upload():
         except Exception as e:
             raise e
 
-
-        # ext = os.path.splitext(file.filename)[1]
-        # filename = f"{uuid.uuid4()}{ext}"
-        # file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-        # file.save(file_path)
-
-        # url = url_for("static", filename=f"uploads/{filename}")
-        # mime_type = file.mimetype
-        # size = os.path.getsize(file_path)
-        # now = datetime.now().isoformat()
-        # user_id = session.get("user_id", None)
-
-        # query(db, "INSERT INTO images (user_id, title, description, filename, url, mime_type, size, uploaded_at, last_edited_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)", (user_id, title, description, filename, url, mime_type, size, now, now))
-
-        # return jsonify({
-        #     "message": "Upload successful",
-        #     "file": {
-        #         "filename": filename,
-        #         "url": url
-        #     }
-        # }), 201
-        
     return id
 
 @app.route("/files")
@@ -191,25 +169,10 @@ def files():
 
     return jsonify(items)
 
-#{
-#   "id": ...,
-#   "name": ...,
-#   "class": ...,
-#   "major": ....
-#}
-
-# {
-#   "id": 1,
-#   "user_id": 42,
-#   "title": "Homework 3 - Geometry",
-#   "description": "My diagram for triangle problem",
-#   "filename": "triangle_homework.png",
-#   "url": "S3_URL"
-#   "mime_type": "image/png",
-#   "size": 245600,
-#   "uploaded_at": "2025-11-07T14:32:00Z",
-#   "last_edited_at": "2025-11-07T14:32:00Z"
-# }
+@app.route("/api/logout", methods=["GET", "POST"])
+def logout():
+    session.clear()
+    return redirect("/login")
 
 
 if __name__ == '__main__':
