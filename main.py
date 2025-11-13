@@ -22,9 +22,9 @@ db = mysql.connector.connect(
     database=os.environ.get("DATABASE")
 )
 
-UPLOAD_FOLDER = "static/uploads"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+#UPLOAD_FOLDER = "static/uploads"
+#os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+#app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 #If windows, use this:
 if os.name == "nt":
