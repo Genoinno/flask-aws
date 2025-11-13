@@ -22,10 +22,6 @@ db = mysql.connector.connect(
     database=os.environ.get("DATABASE")
 )
 
-#UPLOAD_FOLDER = "static/uploads"
-#os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-#app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-
 #If windows, use this:
 if os.name == "nt":
     s3 = boto3.client(
@@ -75,7 +71,11 @@ def login():
     data = request.get_json()
     name = data.get("name")
     password = data.get("password")
-    user = query(db, "SELECT * FROM students WHERE name = %s", (name,), True)[0]
+    try:
+        user = query(db, "SELECT * FROM students WHERE name = %s", (name,), True)[0]
+    except IndexError:
+        pass
+    
     if not user:
         return jsonify({"error": "User not found"}), 404
     
